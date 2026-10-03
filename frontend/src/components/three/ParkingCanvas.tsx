@@ -12,7 +12,6 @@ import { calculateDurationMinutes, calculateExitFee, formatDuration } from '../.
 import {
   RotateCcw,
   Compass,
-  Sparkles,
   CreditCard,
   QrCode,
 } from 'lucide-react';
@@ -406,7 +405,7 @@ export const ParkingCanvas: React.FC<ParkingCanvasProps> = ({
 
         return (
           <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 bg-slate-900/90 border border-slate-700/80 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs text-slate-200 shadow-xl">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <Compass className="w-3.5 h-3.5 text-blue-400" />
             <span>
               Slot <strong className="text-white font-mono font-bold">{selectedSlotId}</strong> (
               <span className={isAvail ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>

@@ -3,7 +3,6 @@ import { useParkingStore } from '../../store/parkingStore';
 import {
   X,
   CarFront,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   Palette,
@@ -381,7 +380,7 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
               <span>Registering Entry...</span>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-amber-300" />
+                <CarFront className="w-4 h-4" />
                 <span>Park Car in Bay {selectedSlot || ''}</span>
                 <ArrowRight className="w-4 h-4" />
               </>

@@ -49,12 +49,14 @@ export const VehiclesView: React.FC<VehiclesViewProps> = ({
       setViewState('LOADING');
       setErrorMessage('');
       const data = await apiService.getActiveVehicles();
-      setBackendVehicles(data);
+      if (Array.isArray(data)) {
+        setBackendVehicles(data);
+      }
       setViewState('SUCCESS');
     } catch (err: any) {
-      console.warn('Could not fetch active vehicles from backend:', err);
-      setViewState('ERROR');
-      setErrorMessage(err?.message || 'Failed to load active vehicles from server.');
+      console.warn('Backend active vehicles call warning, using store fallback:', err);
+      // Graceful fallback: UI displays current parked vehicles directly from store slots
+      setViewState('SUCCESS');
     }
   };
 

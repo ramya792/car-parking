@@ -40,7 +40,6 @@ import {
   X,
   AlertCircle,
   ShieldCheck,
-  Sparkles,
   Plus,
 } from 'lucide-react';
 
@@ -307,6 +306,7 @@ export function App() {
   // 2. User Controlled Ingress / Egress: Triggered when user clicks on any bay or parked car
   const handleSlotClick = useCallback((slotId: string) => {
     selectSlot(slotId);
+    setSlotNumberInput(slotId);
     const slot = slots.find((s) => s.id === slotId);
     if (!slot) return;
 
@@ -442,74 +442,69 @@ export function App() {
 
           {/* Right Header Badges */}
           <div className="flex items-center space-x-2.5 select-none">
-            {/* Quick Auto Add Car */}
+            {/* Add Car */}
             <button
               onClick={handleUserIncomingCar}
               className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
               title="Add one vehicle through automatic entry workflow"
             >
               <CarFront className="w-4 h-4" />
-              <span>Add Car (Auto)</span>
+              <span>Add Car</span>
             </button>
 
-            {/* Custom Add Car To Your Wish */}
-            <button
-              onClick={() => {
-                setSelectedSlotForAdd(null);
-                setIsAddCarModalOpen(true);
-              }}
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
-              title="Add vehicle to your wish with custom plate, model, color and bay"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Add to Wish</span>
-            </button>
-
-            {/* Slot Number Input Group */}
-            <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded-xl p-0.5 shadow-xs">
-              <input
+            {/* Select Slot Number Dropdown & Action Controls */}
+            <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+              <select
                 value={slotNumberInput}
-                onChange={(event) => setSlotNumberInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    const normalized = slotNumberInput.trim().toUpperCase();
-                    const slotId = /^\d{1,2}$/.test(normalized) ? `P${normalized.padStart(2, '0')}` : normalized;
-                    const target = slots.find((s) => s.id === slotId);
-                    if (target && target.status === 'AVAILABLE') {
-                      setSelectedSlotForAdd(slotId);
+                onChange={(e) => {
+                  const chosen = e.target.value;
+                  setSlotNumberInput(chosen);
+                  if (chosen) {
+                    selectSlot(chosen);
+                    const slot = slots.find((s) => s.id === chosen);
+                    if (slot?.status === 'AVAILABLE') {
+                      setSelectedSlotForAdd(chosen);
                       setIsAddCarModalOpen(true);
-                    } else {
-                      requestSouthExit(slotNumberInput);
+                    } else if (slot?.status === 'OCCUPIED' && slot.currentVehicle) {
+                      setSelectedExitSlot(slot);
+                      setIsExitConfirmOpen(true);
                     }
                   }
                 }}
-                placeholder="Slot e.g. P07"
-                aria-label="Slot number to add or remove"
-                className="w-20 px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400"
-              />
+                className="w-36 bg-transparent px-2 py-1 text-xs font-bold text-slate-700 outline-none cursor-pointer border-0"
+                aria-label="Select Slot Number"
+              >
+                <option value="">Select Slot...</option>
+                {slots.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.id} — {s.status === 'AVAILABLE' ? 'Vacant' : 'Occupied'}
+                  </option>
+                ))}
+              </select>
+
               <button
                 onClick={() => {
-                  const normalized = slotNumberInput.trim().toUpperCase();
-                  const slotId = normalized ? (/^\d{1,2}$/.test(normalized) ? `P${normalized.padStart(2, '0')}` : normalized) : null;
+                  const slotId = slotNumberInput || (slots.find((s) => s.status === 'AVAILABLE')?.id ?? 'P01');
                   setSelectedSlotForAdd(slotId);
                   setIsAddCarModalOpen(true);
                 }}
-                className="flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
-                title="Add or park a vehicle to this slot"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+                title={slotNumberInput ? `Add vehicle to slot ${slotNumberInput}` : 'Add vehicle to selected slot'}
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Park</span>
+                <span>Add</span>
               </button>
+
               <button
                 onClick={() => {
                   requestSouthExit(slotNumberInput);
                   setSlotNumberInput('');
                 }}
-                className="flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
-                title="Remove one parked vehicle after payment confirmation"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+                title="Remove one parked vehicle"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Exit</span>
+                <span>Remove</span>
               </button>
             </div>
 
@@ -626,10 +621,6 @@ export function App() {
             activeCameraPreset={activeCameraPreset}
             onPresetChange={(preset) => setActiveCameraPreset(preset)}
             onSouthExitRequest={requestSouthExit}
-            onAddCarRequest={() => {
-              setSelectedSlotForAdd(null);
-              setIsAddCarModalOpen(true);
-            }}
             onSlotSelect={(slotId) => handleSlotClick(slotId)}
             onRequestExitPayment={handleRequestExitPayment}
           />
