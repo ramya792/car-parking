@@ -10,8 +10,9 @@ logger = logging.getLogger("parking_db")
 db_url = settings.DATABASE_URL
 
 # For local development or environments where local PostgreSQL daemon is not started,
-# support seamless SQLite async fallback
-fallback_sqlite_url = "sqlite+aiosqlite:///./smart_parking.db"
+# support seamless SQLite async fallback (using /tmp on serverless environments like Vercel)
+sqlite_path = os.getenv("SQLITE_PATH", "/tmp/smart_parking.db" if (os.getenv("VERCEL") or not os.path.exists("./backend")) else "./smart_parking.db")
+fallback_sqlite_url = f"sqlite+aiosqlite:///{sqlite_path}"
 
 def get_engine():
     try:

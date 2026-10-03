@@ -3,6 +3,18 @@ Vision-Based Intelligent Parking Occupancy & Management System
 FastAPI Backend Application
 """
 
+import sys
+import os
+
+# Ensure project root and backend root are in sys.path
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_current_dir)
+_grandparent_dir = os.path.dirname(_parent_dir)
+
+for _p in [_grandparent_dir, _parent_dir, _current_dir]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.v1.api import api_router

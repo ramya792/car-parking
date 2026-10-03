@@ -11,7 +11,11 @@ class WebSocketService {
   public status: WebSocketStatus = 'DISCONNECTED';
 
   constructor() {
-    const wsHost = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+    const defaultWs =
+      typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+        ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`
+        : 'ws://localhost:8000/ws';
+    const wsHost = import.meta.env.VITE_WS_URL || defaultWs;
     this.url = wsHost;
   }
 
