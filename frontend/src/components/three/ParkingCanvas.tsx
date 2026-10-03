@@ -400,18 +400,37 @@ export const ParkingCanvas: React.FC<ParkingCanvasProps> = ({
       </div>
 
       {/* Top Center Focus Indicator (when a slot is focused) */}
-      {selectedSlotId && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 bg-blue-950/80 border border-blue-500/50 backdrop-blur-md px-3 py-1 rounded-full text-xs text-blue-200 shadow-lg">
-          <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin-slow" />
-          <span>Focused on Slot <strong className="text-white font-mono">{selectedSlotId}</strong></span>
-          <button
-            onClick={() => handlePreset('DEFAULT')}
-            className="ml-1 text-[10px] bg-blue-600/40 hover:bg-blue-600 px-2 py-0.5 rounded text-white transition-colors"
-          >
-            Reset Focus (Esc)
-          </button>
-        </div>
-      )}
+      {selectedSlotId && (() => {
+        const focusedSlot = slots.find((s) => s.id === selectedSlotId);
+        const isAvail = focusedSlot?.status === 'AVAILABLE';
+
+        return (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 bg-slate-900/90 border border-slate-700/80 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs text-slate-200 shadow-xl">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <span>
+              Slot <strong className="text-white font-mono font-bold">{selectedSlotId}</strong> (
+              <span className={isAvail ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                {isAvail ? 'Vacant' : 'Occupied'}
+              </span>
+              )
+            </span>
+            <button
+              onClick={() => onSlotSelect?.(selectedSlotId)}
+              className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold text-white shadow-xs transition-all cursor-pointer ${
+                isAvail ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'
+              }`}
+            >
+              {isAvail ? '+ Add Car' : '🚪 Exit Car'}
+            </button>
+            <button
+              onClick={() => handlePreset('DEFAULT')}
+              className="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded text-slate-300 transition-colors"
+            >
+              Reset (Esc)
+            </button>
+          </div>
+        );
+      })()}
 
 
       {/* Interactive Exit Payment Modal: Appears when vehicle reaches Exit Stop Line */}

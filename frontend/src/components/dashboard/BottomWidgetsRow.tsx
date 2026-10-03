@@ -9,6 +9,7 @@ interface BottomWidgetsRowProps {
   occupancyPercent: number;
   todaysRevenue: number;
   onViewAllEntries?: () => void;
+  onSlotClick?: (slotId: string) => void;
   timeOfDay?: 'DAY' | 'NIGHT';
 }
 
@@ -19,6 +20,7 @@ export const BottomWidgetsRow: React.FC<BottomWidgetsRowProps> = ({
   occupancyPercent = 0,
   todaysRevenue = 0,
   onViewAllEntries,
+  onSlotClick,
   timeOfDay = 'DAY',
 }) => {
   const isDay = timeOfDay === 'DAY';
@@ -64,7 +66,7 @@ export const BottomWidgetsRow: React.FC<BottomWidgetsRowProps> = ({
   const tableHeader = isDay ? 'text-slate-400 font-mono border-slate-200' : 'text-slate-400 font-mono border-slate-800/50';
 
   return (
-    <div className="grid grid-cols-4 gap-3.5 select-none">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 select-none">
       
       {/* 1. Recent Vehicle Entries */}
       <div className={`border rounded-xl p-3.5 flex flex-col justify-between transition-all ${widgetCard}`}>
@@ -215,6 +217,75 @@ export const BottomWidgetsRow: React.FC<BottomWidgetsRowProps> = ({
               <span key={i} className="flex-1 text-center">{bar.time}</span>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* 4. Quick Bay Matrix & Add/Exit Controller */}
+      <div className={`border rounded-xl p-3.5 flex flex-col justify-between transition-all ${widgetCard}`}>
+        <div>
+          <div className={`flex items-center justify-between pb-1.5 border-b ${headerBorder}`}>
+            <h3 className={`text-xs tracking-wide ${headerText}`}>20 Bays Matrix</h3>
+            <span className="text-[10px] font-mono font-bold text-emerald-600">
+              {availableCount} Vacant
+            </span>
+          </div>
+
+          <div className="pt-2 space-y-1.5">
+            {/* North Row P01-P10 */}
+            <div>
+              <span className="text-[9px] text-slate-400 font-semibold block mb-0.5">North (P01-P10)</span>
+              <div className="grid grid-cols-5 gap-1">
+                {slots.slice(0, 10).map((slot) => {
+                  const isAvail = slot.status === 'AVAILABLE';
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => onSlotClick?.(slot.id)}
+                      className={`py-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                        isAvail
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 hover:scale-105'
+                          : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 hover:scale-105'
+                      }`}
+                      title={isAvail ? `Bay ${slot.id}: Vacant — Click to Add Car` : `Bay ${slot.id}: Occupied by ${slot.currentVehicle?.plateNumber || 'Car'} — Click to Exit`}
+                    >
+                      {slot.id}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* South Row P11-P20 */}
+            <div>
+              <span className="text-[9px] text-slate-400 font-semibold block mb-0.5">South (P11-P20)</span>
+              <div className="grid grid-cols-5 gap-1">
+                {slots.slice(10, 20).map((slot) => {
+                  const isAvail = slot.status === 'AVAILABLE';
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => onSlotClick?.(slot.id)}
+                      className={`py-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                        isAvail
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 hover:scale-105'
+                          : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 hover:scale-105'
+                      }`}
+                      title={isAvail ? `Bay ${slot.id}: Vacant — Click to Add Car` : `Bay ${slot.id}: Occupied by ${slot.currentVehicle?.plateNumber || 'Car'} — Click to Exit`}
+                    >
+                      {slot.id}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2 text-[9px] text-slate-400 flex items-center justify-between border-t border-slate-100 font-medium">
+          <span className="text-emerald-700 flex items-center gap-1">● Click Green: Add Car</span>
+          <span className="text-rose-700 flex items-center gap-1">● Click Red: Exit Car</span>
         </div>
       </div>
 

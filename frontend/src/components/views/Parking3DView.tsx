@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Eye, RotateCcw } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Eye, RotateCcw, Sparkles } from 'lucide-react';
 import { ParkingCanvas } from '../three/ParkingCanvas';
 import type { CameraPreset } from '../three/CameraRig';
 import type { EntryAnimationData } from '../three/EnteringVehicleAnimation';
@@ -16,6 +16,7 @@ interface Parking3DViewProps {
   activeCameraPreset: CameraPreset;
   onPresetChange: (preset: CameraPreset) => void;
   onSouthExitRequest: () => void;
+  onAddCarRequest?: () => void;
   onSlotSelect: (slotId: string) => void;
   onRequestExitPayment?: (request: ExitPaymentRequest, approvePayment: () => void) => void;
 }
@@ -30,6 +31,7 @@ export const Parking3DView: React.FC<Parking3DViewProps> = ({
   activeCameraPreset,
   onPresetChange,
   onSouthExitRequest,
+  onAddCarRequest,
   onSlotSelect,
   onRequestExitPayment,
 }) => {
@@ -57,9 +59,24 @@ export const Parking3DView: React.FC<Parking3DViewProps> = ({
             <span>{label}</span>
           </button>
         ))}
+
+        <div className="my-1 border-t border-slate-800" />
+        <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Actions</div>
+
+        {onAddCarRequest && (
+          <button
+            onClick={onAddCarRequest}
+            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 cursor-pointer"
+            title="Add a custom vehicle to your chosen parking slot"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>Add Car</span>
+          </button>
+        )}
+
         <button
           onClick={onSouthExitRequest}
-          className="flex items-center gap-2 rounded-lg bg-rose-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-500"
+          className="flex items-center gap-2 rounded-lg bg-rose-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-500 cursor-pointer"
           title="Start the payment-gated exit process for an occupied vehicle"
         >
           <ArrowDown className="h-3.5 w-3.5" />

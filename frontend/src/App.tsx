@@ -3,6 +3,7 @@ import { ParkingCanvas } from './components/three/ParkingCanvas';
 import type { ExitPaymentRequest } from './components/three/ParkingCanvas';
 import { useParkingStore } from './store/parkingStore';
 import { EntryManagementModal } from './components/entry/EntryManagementModal';
+import { AddCarModal } from './components/entry/AddCarModal';
 import { ParkingAreaCameraModal } from './components/cameras/ParkingAreaCameraModal';
 import { ExitManagementModal } from './components/exit/ExitManagementModal';
 import { TariffCalculatorModal } from './components/billing/TariffCalculatorModal';
@@ -39,6 +40,8 @@ import {
   X,
   AlertCircle,
   ShieldCheck,
+  Sparkles,
+  Plus,
 } from 'lucide-react';
 
 export function App() {
@@ -66,6 +69,8 @@ export function App() {
 
   // Modals state
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
+  const [isAddCarModalOpen, setIsAddCarModalOpen] = useState(false);
+  const [selectedSlotForAdd, setSelectedSlotForAdd] = useState<string | null>(null);
   const [isCam02ModalOpen, setIsCam02ModalOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isTariffModalOpen, setIsTariffModalOpen] = useState(false);
@@ -299,7 +304,7 @@ export function App() {
     });
   }, [slots, handleEntryRegistered]);
 
-  // 2. User Controlled Exit: Triggered when user clicks on any parked car or occupied slot
+  // 2. User Controlled Ingress / Egress: Triggered when user clicks on any bay or parked car
   const handleSlotClick = useCallback((slotId: string) => {
     selectSlot(slotId);
     const slot = slots.find((s) => s.id === slotId);
@@ -309,6 +314,10 @@ export function App() {
       // User clicked on a parked car -> open exit clearance modal!
       setSelectedExitSlot(slot);
       setIsExitConfirmOpen(true);
+    } else if (slot.status === 'AVAILABLE') {
+      // User clicked on a vacant slot -> open custom Add Car modal for this bay!
+      setSelectedSlotForAdd(slotId);
+      setIsAddCarModalOpen(true);
     }
   }, [slots, selectSlot]);
 
@@ -420,7 +429,7 @@ export function App() {
         {/* Top Header Bar */}
         <header className="flex items-center justify-between pb-1">
           {/* Search Bar */}
-          <div className="relative w-96">
+          <div className="relative w-80 lg:w-96">
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input
               type="text"
@@ -432,37 +441,77 @@ export function App() {
           </div>
 
           {/* Right Header Badges */}
-          <div className="flex items-center space-x-3 select-none">
+          <div className="flex items-center space-x-2.5 select-none">
+            {/* Quick Auto Add Car */}
             <button
               onClick={handleUserIncomingCar}
               className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
-              title="Add one vehicle through the entry workflow"
+              title="Add one vehicle through automatic entry workflow"
             >
               <CarFront className="w-4 h-4" />
-              <span>Add Car</span>
+              <span>Add Car (Auto)</span>
             </button>
 
-            <input
-              value={slotNumberInput}
-              onChange={(event) => setSlotNumberInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') requestSouthExit(slotNumberInput);
-              }}
-              placeholder="Slot e.g. P07"
-              aria-label="Slot number to remove"
-              className="w-28 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
-            />
+            {/* Custom Add Car To Your Wish */}
             <button
               onClick={() => {
-                requestSouthExit(slotNumberInput);
-                setSlotNumberInput('');
+                setSelectedSlotForAdd(null);
+                setIsAddCarModalOpen(true);
               }}
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
-              title="Remove one parked vehicle after payment confirmation"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+              title="Add vehicle to your wish with custom plate, model, color and bay"
             >
-              <LogOut className="w-4 h-4" />
-              <span>Remove Car</span>
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Add to Wish</span>
             </button>
+
+            {/* Slot Number Input Group */}
+            <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded-xl p-0.5 shadow-xs">
+              <input
+                value={slotNumberInput}
+                onChange={(event) => setSlotNumberInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    const normalized = slotNumberInput.trim().toUpperCase();
+                    const slotId = /^\d{1,2}$/.test(normalized) ? `P${normalized.padStart(2, '0')}` : normalized;
+                    const target = slots.find((s) => s.id === slotId);
+                    if (target && target.status === 'AVAILABLE') {
+                      setSelectedSlotForAdd(slotId);
+                      setIsAddCarModalOpen(true);
+                    } else {
+                      requestSouthExit(slotNumberInput);
+                    }
+                  }
+                }}
+                placeholder="Slot e.g. P07"
+                aria-label="Slot number to add or remove"
+                className="w-20 px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400"
+              />
+              <button
+                onClick={() => {
+                  const normalized = slotNumberInput.trim().toUpperCase();
+                  const slotId = normalized ? (/^\d{1,2}$/.test(normalized) ? `P${normalized.padStart(2, '0')}` : normalized) : null;
+                  setSelectedSlotForAdd(slotId);
+                  setIsAddCarModalOpen(true);
+                }}
+                className="flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+                title="Add or park a vehicle to this slot"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Park</span>
+              </button>
+              <button
+                onClick={() => {
+                  requestSouthExit(slotNumberInput);
+                  setSlotNumberInput('');
+                }}
+                className="flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+                title="Remove one parked vehicle after payment confirmation"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Exit</span>
+              </button>
+            </div>
 
             {/* Clean Lot to 0 Button */}
             <button
@@ -550,6 +599,7 @@ export function App() {
               occupancyPercent={occupancyPercent}
               todaysRevenue={kpiStats.todaysRevenue ?? 0}
               onViewAllEntries={() => setActiveTab('vehicles')}
+              onSlotClick={(slotId) => handleSlotClick(slotId)}
               timeOfDay={timeOfDay}
             />
           </>
@@ -576,6 +626,10 @@ export function App() {
             activeCameraPreset={activeCameraPreset}
             onPresetChange={(preset) => setActiveCameraPreset(preset)}
             onSouthExitRequest={requestSouthExit}
+            onAddCarRequest={() => {
+              setSelectedSlotForAdd(null);
+              setIsAddCarModalOpen(true);
+            }}
             onSlotSelect={(slotId) => handleSlotClick(slotId)}
             onRequestExitPayment={handleRequestExitPayment}
           />
@@ -631,6 +685,17 @@ export function App() {
         {/* 11. Settings Configuration */}
         {activeTab === 'settings' && <SettingsView />}
       </main>
+
+      {/* Custom Add Car To Wish & Slot Modal */}
+      <AddCarModal
+        isOpen={isAddCarModalOpen}
+        onClose={() => {
+          setIsAddCarModalOpen(false);
+          setSelectedSlotForAdd(null);
+        }}
+        defaultSlotId={selectedSlotForAdd}
+        onAddCar={handleEntryRegistered}
+      />
 
       {/* Preserved Modals */}
       <EntryManagementModal
