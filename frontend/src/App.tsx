@@ -4,6 +4,7 @@ import type { ExitPaymentRequest } from './components/three/ParkingCanvas';
 import { useParkingStore } from './store/parkingStore';
 import { EntryManagementModal } from './components/entry/EntryManagementModal';
 import { AddCarModal } from './components/entry/AddCarModal';
+import { RemoveCarModal } from './components/exit/RemoveCarModal';
 import { ParkingAreaCameraModal } from './components/cameras/ParkingAreaCameraModal';
 import { ExitManagementModal } from './components/exit/ExitManagementModal';
 import { TariffCalculatorModal } from './components/billing/TariffCalculatorModal';
@@ -70,6 +71,8 @@ export function App() {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [isAddCarModalOpen, setIsAddCarModalOpen] = useState(false);
   const [selectedSlotForAdd, setSelectedSlotForAdd] = useState<string | null>(null);
+  const [isRemoveCarModalOpen, setIsRemoveCarModalOpen] = useState(false);
+  const [selectedSlotForRemove, setSelectedSlotForRemove] = useState<string | null>(null);
   const [isCam02ModalOpen, setIsCam02ModalOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isTariffModalOpen, setIsTariffModalOpen] = useState(false);
@@ -452,35 +455,8 @@ export function App() {
               <span>Add Car</span>
             </button>
 
-            {/* Select Slot Number Dropdown & Action Controls */}
+            {/* Slot Action Controls */}
             <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
-              <select
-                value={slotNumberInput}
-                onChange={(e) => {
-                  const chosen = e.target.value;
-                  setSlotNumberInput(chosen);
-                  if (chosen) {
-                    selectSlot(chosen);
-                    const slot = slots.find((s) => s.id === chosen);
-                    if (slot?.status === 'AVAILABLE') {
-                      setSelectedSlotForAdd(chosen);
-                      setIsAddCarModalOpen(true);
-                    } else if (slot?.status === 'OCCUPIED' && slot.currentVehicle) {
-                      setSelectedExitSlot(slot);
-                      setIsExitConfirmOpen(true);
-                    }
-                  }
-                }}
-                className="w-36 bg-transparent px-2 py-1 text-xs font-bold text-slate-700 outline-none cursor-pointer border-0"
-                aria-label="Select Slot Number"
-              >
-                <option value="">Select Slot...</option>
-                {slots.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.id} — {s.status === 'AVAILABLE' ? 'Vacant' : 'Occupied'}
-                  </option>
-                ))}
-              </select>
 
               <button
                 onClick={() => {
@@ -489,7 +465,7 @@ export function App() {
                   setIsAddCarModalOpen(true);
                 }}
                 className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
-                title={slotNumberInput ? `Add vehicle to slot ${slotNumberInput}` : 'Add vehicle to selected slot'}
+                title="Add vehicle to slot"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add</span>
@@ -497,11 +473,12 @@ export function App() {
 
               <button
                 onClick={() => {
-                  requestSouthExit(slotNumberInput);
-                  setSlotNumberInput('');
+                  const slotId = slotNumberInput || (slots.find((s) => s.status === 'OCCUPIED' && s.currentVehicle)?.id ?? null);
+                  setSelectedSlotForRemove(slotId);
+                  setIsRemoveCarModalOpen(true);
                 }}
                 className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
-                title="Remove one parked vehicle"
+                title="Remove parked vehicle from slot"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Remove</span>
@@ -686,6 +663,20 @@ export function App() {
         }}
         defaultSlotId={selectedSlotForAdd}
         onAddCar={handleEntryRegistered}
+      />
+
+      {/* Remove Car from Slot Modal */}
+      <RemoveCarModal
+        isOpen={isRemoveCarModalOpen}
+        onClose={() => {
+          setIsRemoveCarModalOpen(false);
+          setSelectedSlotForRemove(null);
+        }}
+        defaultSlotId={selectedSlotForRemove}
+        onConfirmExit={(slot) => {
+          setSelectedExitSlot(slot);
+          setIsExitConfirmOpen(true);
+        }}
       />
 
       {/* Preserved Modals */}

@@ -4,10 +4,6 @@ import {
   X,
   CarFront,
   ArrowRight,
-  ShieldCheck,
-  Palette,
-  Shuffle,
-  Check,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 
@@ -33,17 +29,18 @@ const SAMPLE_PLATES = [
   'KL07MN8765',
 ];
 
-const COLOR_PRESETS = [
-  { name: 'Royal Blue', hex: '#2563eb' },
-  { name: 'Crimson Red', hex: '#dc2626' },
-  { name: 'Emerald Green', hex: '#10b981' },
-  { name: 'Amber Gold', hex: '#f59e0b' },
-  { name: 'Violet Purple', hex: '#7c3aed' },
-  { name: 'Midnight Black', hex: '#0f172a' },
-  { name: 'Pearl White', hex: '#f8fafc' },
-  { name: 'Slate Silver', hex: '#64748b' },
-  { name: 'Sunset Orange', hex: '#ea580c' },
-  { name: 'Cyan Blue', hex: '#06b6d4' },
+const VEHICLE_TYPES: ('SEDAN' | 'SUV' | 'HATCHBACK')[] = ['SEDAN', 'SUV', 'HATCHBACK'];
+
+const VEHICLE_COLORS = [
+  '#2563eb',
+  '#dc2626',
+  '#10b981',
+  '#f59e0b',
+  '#7c3aed',
+  '#0f172a',
+  '#64748b',
+  '#ea580c',
+  '#06b6d4',
 ];
 
 export const AddCarModal: React.FC<AddCarModalProps> = ({
@@ -56,7 +53,7 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
 
   const [plateNumber, setPlateNumber] = useState('KA05QR8765');
   const [vehicleType, setVehicleType] = useState<'SEDAN' | 'SUV' | 'HATCHBACK'>('SEDAN');
-  const [color, setColor] = useState('#2563eb');
+  const [color, setColor] = useState(() => VEHICLE_COLORS[Math.floor(Math.random() * VEHICLE_COLORS.length)]);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -85,14 +82,11 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
     } else {
       setPlateNumber(`IND${Math.floor(1000 + Math.random() * 9000)}`);
     }
+    setVehicleType(VEHICLE_TYPES[Math.floor(Math.random() * VEHICLE_TYPES.length)]);
+    setColor(VEHICLE_COLORS[Math.floor(Math.random() * VEHICLE_COLORS.length)]);
   }, [isOpen, defaultSlotId, slots]);
 
   if (!isOpen) return null;
-
-  const handleRandomizePlate = () => {
-    const random = SAMPLE_PLATES[Math.floor(Math.random() * SAMPLE_PLATES.length)];
-    setPlateNumber(random);
-  };
 
   const handleRegisterAndPark = async () => {
     if (!selectedSlot) {
@@ -149,7 +143,7 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
                 )}
               </h2>
               <p className="text-xs text-slate-500">
-                Customize vehicle plate, model, color, and assign to your chosen parking bay.
+                Choose an available parking bay to park a vehicle.
               </p>
             </div>
           </div>
@@ -180,7 +174,7 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
                 ⚠️ All 20 parking bays are currently occupied. Please remove or exit a parked car first.
               </div>
             ) : (
-              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-36 overflow-y-auto">
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-52 overflow-y-auto">
                 {slots.map((slot) => {
                   const isAvail = slot.status === 'AVAILABLE';
                   const isSelected = selectedSlot === slot.id;
@@ -191,7 +185,7 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
                       type="button"
                       disabled={!isAvail}
                       onClick={() => setSelectedSlot(slot.id)}
-                      className={`py-1.5 px-1 rounded-lg text-[11px] font-mono font-bold transition-all flex flex-col items-center justify-center border ${
+                      className={`py-2 px-1 rounded-lg text-[11px] font-mono font-bold transition-all flex flex-col items-center justify-center border ${
                         isSelected
                           ? 'bg-blue-600 text-white border-blue-600 shadow-sm scale-105 ring-2 ring-blue-300'
                           : isAvail
@@ -209,154 +203,6 @@ export const AddCarModal: React.FC<AddCarModalProps> = ({
                 })}
               </div>
             )}
-          </div>
-
-          {/* 2. License Plate Input */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-slate-700">
-                2. License Plate Number (HSRP)
-              </label>
-              <button
-                type="button"
-                onClick={handleRandomizePlate}
-                className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
-              >
-                <Shuffle className="w-3 h-3" />
-                <span>Random Sample</span>
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                value={plateNumber}
-                onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
-                placeholder="e.g. KA05QR8765"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold text-sm tracking-wider focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
-              <div className="absolute right-3 top-2.5 text-xs text-emerald-700 flex items-center gap-1 font-mono font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>ANPR Ready</span>
-              </div>
-            </div>
-
-            {/* Quick Sample Chips */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {SAMPLE_PLATES.slice(0, 6).map((plate) => (
-                <button
-                  key={plate}
-                  type="button"
-                  onClick={() => setPlateNumber(plate)}
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-md border transition-all ${
-                    plateNumber === plate
-                      ? 'bg-blue-600 text-white border-blue-600 font-bold'
-                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                  }`}
-                >
-                  {plate}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 3. Vehicle Type Selection */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              3. Vehicle Model / Type
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['SEDAN', 'SUV', 'HATCHBACK'] as const).map((type) => {
-                const isSelected = vehicleType === type;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setVehicleType(type)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
-                      isSelected
-                        ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <CarFront className="w-3.5 h-3.5" />
-                    <span>{type}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 4. Vehicle Paint Color */}
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5 text-blue-600" />
-                <span>4. Vehicle Color to Your Wish</span>
-              </label>
-              <div className="flex items-center space-x-1.5">
-                <span
-                  className="w-4 h-4 rounded-full border border-slate-300 shadow-xs inline-block"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-[11px] font-mono font-bold text-slate-600 uppercase">{color}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {COLOR_PRESETS.map((preset) => {
-                const isSelected = color.toLowerCase() === preset.hex.toLowerCase();
-                return (
-                  <button
-                    key={preset.hex}
-                    type="button"
-                    onClick={() => setColor(preset.hex)}
-                    style={{ backgroundColor: preset.hex }}
-                    className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${
-                      isSelected ? 'ring-2 ring-offset-2 ring-blue-600 scale-110 shadow-md' : 'border-slate-300 hover:scale-105'
-                    }`}
-                    title={preset.name}
-                  >
-                    {isSelected && (
-                      <Check
-                        className={`w-4 h-4 ${
-                          preset.hex === '#f8fafc' || preset.hex === '#f59e0b' ? 'text-slate-900' : 'text-white'
-                        }`}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-
-              {/* Native color picker */}
-              <div className="flex items-center space-x-1.5 ml-auto border border-slate-200 rounded-lg px-2 py-1 bg-slate-50">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent"
-                  title="Pick Custom Color"
-                />
-                <span className="text-[10px] text-slate-500 font-semibold">Custom</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Preview Box */}
-          <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
-            <div className="space-y-0.5">
-              <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">
-                Ready to Enter & Park
-              </span>
-              <span className="font-bold text-slate-900 font-mono">
-                {plateNumber || 'VEHICLE'} • {vehicleType}
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] text-slate-500 block">Assigned Bay</span>
-              <span className="font-mono font-extrabold text-sm text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-xs">
-                {selectedSlot || 'None'}
-              </span>
-            </div>
           </div>
 
         </div>
